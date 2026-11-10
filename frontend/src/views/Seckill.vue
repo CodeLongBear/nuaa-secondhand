@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getHotGoods, seckill, resolveImage } from '../api'
+import { coverClass } from '../utils/cover'
 
 const goodsList = ref([])
 const now = ref(Date.now())
@@ -41,7 +42,7 @@ onUnmounted(() => {
 
 <template>
   <div>
-    <h2 style="margin-bottom: 20px">限时抢购</h2>
+    <h1 style="margin-bottom: 20px">限时抢购</h1>
     <div class="countdown">
       距离今日抢购结束还有
       <span class="cd-time">{{ remaining() }}</span>
@@ -50,7 +51,10 @@ onUnmounted(() => {
       <el-col v-for="g in goodsList" :key="g.id" :span="6" style="margin-bottom: 16px">
         <el-card>
           <img v-if="g.images" :src="resolveImage(g.images.split(',')[0])" class="cover" />
-          <div v-else class="cover placeholder">无图</div>
+          <div v-else class="cover cover-ph" :class="coverClass(g.category)">
+            <span class="cat-name">{{ g.category }}</span>
+            <span class="cat-sub">校园二手</span>
+          </div>
           <h3>{{ g.title }}</h3>
           <p class="desc">{{ g.description }}</p>
           <div class="meta">

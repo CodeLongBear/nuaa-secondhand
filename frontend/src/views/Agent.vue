@@ -83,7 +83,7 @@ onMounted(loadGoods)
 
 <template>
   <div>
-    <h2 style="margin-bottom: 20px">AI 智能助手</h2>
+    <h1 style="margin-bottom: 20px">AI 智能助手</h1>
 
     <el-card style="margin-bottom: 20px">
       <h3>智能商品推荐</h3>

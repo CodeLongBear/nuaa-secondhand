@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getUserDetail, getUserGoods, isFollow, follow, resolveImage } from '../api'
+import { coverClass } from '../utils/cover'
 
 const route = useRoute()
 const router = useRouter()
@@ -51,7 +52,10 @@ onMounted(load)
       <el-col v-for="g in goodsList" :key="g.id" :span="6" style="margin-bottom: 16px">
         <el-card class="goods-card" @click="goDetail(g.id)">
           <img v-if="g.images" :src="resolveImage(g.images.split(',')[0])" class="cover" />
-          <div v-else class="cover placeholder">无图</div>
+          <div v-else class="cover cover-ph" :class="coverClass(g.category)">
+            <span class="cat-name">{{ g.category }}</span>
+            <span class="cat-sub">校园二手</span>
+          </div>
           <h4 class="t">{{ g.title }}</h4>
           <div class="gm">
             <span class="price num">￥{{ g.price }}</span>

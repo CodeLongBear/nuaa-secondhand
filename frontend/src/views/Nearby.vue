@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getNearby, resolveImage } from '../api'
+import { coverClass } from '../utils/cover'
 
 const router = useRouter()
 const goodsList = ref([])
@@ -23,7 +24,7 @@ onMounted(load)
 
 <template>
   <div>
-    <h2 style="margin-bottom: 20px">附近好物</h2>
+    <h1 style="margin-bottom: 20px">附近好物</h1>
     <div class="search-bar">
       <span>经度</span>
       <el-input-number v-model="longitude" :precision="4" :step="0.01" />
@@ -38,6 +39,10 @@ onMounted(load)
       <el-col v-for="g in goodsList" :key="g.id" :span="6" style="margin-bottom: 16px">
         <el-card style="cursor: pointer" @click="router.push(`/goods/${g.id}`)">
           <img v-if="g.images" :src="resolveImage(g.images.split(',')[0])" class="cover" />
+          <div v-else class="cover cover-ph" :class="coverClass(g.category)">
+            <span class="cat-name">{{ g.category }}</span>
+            <span class="cat-sub">校园二手</span>
+          </div>
           <h3>{{ g.title }}</h3>
           <p class="desc">{{ g.location }}</p>
           <span class="price num">￥{{ g.price }}</span>

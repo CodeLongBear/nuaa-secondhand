@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getMyFavorites, removeFavorite, resolveImage } from '../api'
+import { coverClass } from '../utils/cover'
 
 const router = useRouter()
 const list = ref([])
@@ -27,7 +28,7 @@ onMounted(load)
 
 <template>
   <div>
-    <h2 style="margin-bottom: 20px">我的收藏</h2>
+    <h1 style="margin-bottom: 20px">我的收藏</h1>
     <el-row :gutter="16">
       <el-col v-for="g in list" :key="g.id" :span="6" style="margin-bottom: 16px">
         <el-card class="fav-card">
@@ -37,7 +38,10 @@ onMounted(load)
             class="cover"
             @click="goDetail(g.id)"
           />
-          <div v-else class="cover placeholder">无图</div>
+          <div v-else class="cover cover-ph" :class="coverClass(g.category)" @click="goDetail(g.id)">
+            <span class="cat-name">{{ g.category }}</span>
+            <span class="cat-sub">校园二手</span>
+          </div>
           <h3 class="t" @click="goDetail(g.id)">{{ g.title }}</h3>
           <div class="meta">
             <span class="price num">￥{{ g.price }}</span>

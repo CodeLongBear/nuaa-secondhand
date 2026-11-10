@@ -34,7 +34,7 @@ onMounted(load)
 
 <template>
   <div>
-    <h2 style="margin-bottom: 20px">校园用户</h2>
+    <h1 style="margin-bottom: 20px">校园用户</h1>
     <el-row :gutter="16">
       <el-col v-for="u in users" :key="u.id" :span="6" style="margin-bottom: 16px">
         <el-card class="user-card" @click="goHome(u.id)">

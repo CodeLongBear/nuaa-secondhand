@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getGoodsList, getSearchHot, getSearchHistory, resolveImage } from '../api'
+import { coverClass } from '../utils/cover'
 
 const router = useRouter()
 const goodsList = ref([])
@@ -73,13 +74,18 @@ onMounted(() => {
 
 <template>
   <div>
+    <div class="page-head">
+      <h1>校园二手交易</h1>
+      <p class="page-sub">让闲置流动起来，在校园里发现值得买的好物</p>
+    </div>
+
     <div class="search-bar">
       <el-input
         v-model="keyword"
         placeholder="搜索商品标题 / 描述"
         clearable
         @keyup.enter="search"
-        style="width: 240px"
+        style="width: 280px"
       />
       <el-select v-model="category" placeholder="全部分类" clearable style="width: 130px" @change="search">
         <el-option v-for="c in categories" :key="c" :label="c" :value="c" />
@@ -87,7 +93,7 @@ onMounted(() => {
       <el-select v-model="condition" placeholder="成色" clearable style="width: 120px" @change="search">
         <el-option v-for="c in conditions" :key="c" :label="c" :value="c" />
       </el-select>
-      <el-select v-model="sort" placeholder="排序" clearable style="width: 140px" @change="search">
+      <el-select v-model="sort" placeholder="排序" clearable style="width: 150px" @change="search">
         <el-option label="最新发布" value="" />
         <el-option label="价格从低到高" value="price" />
         <el-option label="价格从高到低" value="price_desc" />
@@ -112,15 +118,17 @@ onMounted(() => {
       <el-col v-for="g in goodsList" :key="g.id" :span="6" style="margin-bottom: 16px">
         <el-card class="goods-card" @click="goDetail(g.id)">
           <img v-if="g.images" :src="resolveImage(g.images.split(',')[0])" class="cover" />
-          <div v-else class="cover placeholder">无图</div>
+          <div v-else class="cover cover-ph" :class="coverClass(g.category)">
+            <span class="cat-name">{{ g.category }}</span>
+            <span class="cat-sub">校园二手</span>
+          </div>
           <h3 class="goods-title">{{ g.title }}</h3>
           <p class="goods-desc">{{ g.description }}</p>
           <div class="goods-meta">
             <span class="price num">￥{{ g.price }}</span>
             <el-tag v-if="g.isHot === 1" type="danger" size="small">抢购</el-tag>
-            <el-tag size="small" type="info">{{ g.category }}</el-tag>
+            <span class="location">{{ g.location }}</span>
           </div>
-          <p class="location">{{ g.location }}</p>
         </el-card>
       </el-col>
     </el-row>
@@ -145,34 +153,28 @@ onMounted(() => {
   gap: 12px;
   margin-bottom: 12px;
   flex-wrap: wrap;
+  align-items: center;
 }
 .word-bar {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   flex-wrap: wrap;
 }
 .word-label {
   font-size: 13px;
-  color: #909399;
+  color: var(--muted);
 }
 .word-tag {
   cursor: pointer;
 }
 .cover {
   width: 100%;
-  height: 140px;
+  height: 150px;
   object-fit: cover;
   border-radius: 8px;
-  margin-bottom: 8px;
-}
-.placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #c0c4cc;
-  background: #f5f7fa;
+  margin-bottom: 12px;
 }
 .goods-card {
   cursor: pointer;
@@ -180,31 +182,32 @@ onMounted(() => {
 }
 .goods-title {
   font-size: 16px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .goods-desc {
-  color: #909399;
+  color: var(--muted);
   font-size: 13px;
-  height: 40px;
+  height: 38px;
   overflow: hidden;
   margin-bottom: 12px;
+  line-height: 1.5;
 }
 .goods-meta {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 8px;
 }
 .price {
   color: var(--text);
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
 }
 .location {
-  color: #909399;
+  color: var(--muted);
   font-size: 12px;
+  margin-left: auto;
 }
 </style>

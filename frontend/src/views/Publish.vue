@@ -75,7 +75,7 @@ onMounted(async () => {
 
 <template>
   <el-card style="max-width: 640px; margin: 0 auto">
-    <h2 style="margin-bottom: 20px">{{ editId ? '编辑商品' : '发布二手商品' }}</h2>
+    <h1 style="margin-bottom: 20px">{{ editId ? '编辑商品' : '发布二手商品' }}</h1>
     <el-form label-width="80px">
       <el-form-item label="标题">
         <el-input v-model="form.title" placeholder="商品标题" />

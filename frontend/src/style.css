@@ -51,9 +51,9 @@
   --control-height: 32px;
 
   /* 字号（app 不是 display type） */
-  --fs-title: 22px;
-  --fs-section: 16px;
-  --fs-kpi: 28px;
+  --fs-title: 26px;
+  --fs-section: 17px;
+  --fs-kpi: 30px;
   --fs-body: 14px;
   --fs-small: 12px;
 
@@ -168,4 +168,58 @@ h3 {
   color: var(--muted);
   background: transparent;
   border-bottom: 1px solid var(--border);
+}
+
+/* ===== 页面标题区 ===== */
+h1 {
+  font-size: var(--fs-title);
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.page-head {
+  margin-bottom: 20px;
+}
+.page-head h1 {
+  line-height: 1.2;
+}
+.page-head .page-sub {
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* ===== 无图商品封面：分类色块 ===== */
+.cover-ph {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  gap: 3px;
+}
+.cover-ph .cat-name {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 3px;
+}
+.cover-ph .cat-sub {
+  font-size: 12px;
+  opacity: 0.82;
+  letter-spacing: 1px;
+}
+.cover-ph--digital { background: #35618f; }
+.cover-ph--book    { background: #3f7d5c; }
+.cover-ph--life    { background: #a06f3a; }
+.cover-ph--clothes { background: #8a5f82; }
+.cover-ph--sport   { background: #a34a44; }
+.cover-ph--other   { background: #5f6672; }
+
+/* ===== 商品卡片 hover（无阴影，用位移 + 边框） ===== */
+.goods-card {
+  transition: transform 0.16s ease, border-color 0.16s ease;
+}
+.goods-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
 }

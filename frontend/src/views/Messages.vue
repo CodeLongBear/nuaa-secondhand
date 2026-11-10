@@ -25,7 +25,7 @@ onMounted(load)
 
 <template>
   <div>
-    <h2 style="margin-bottom: 20px">消息通知</h2>
+    <h1 style="margin-bottom: 20px">消息通知</h1>
     <div style="margin-bottom: 16px">
       <el-switch
         v-model="onlyUnread"

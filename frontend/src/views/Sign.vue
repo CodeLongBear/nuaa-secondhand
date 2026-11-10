@@ -21,7 +21,7 @@ onMounted(load)
 
 <template>
   <div class="sign-wrap">
-    <h2 style="margin-bottom: 28px">每日签到</h2>
+    <h1 style="margin-bottom: 28px">每日签到</h1>
     <p class="count num">{{ count }} <span class="unit">天</span></p>
     <p class="hint">已连续签到</p>
     <el-button type="primary" size="large" @click="handleSign">立即签到</el-button>

@@ -49,7 +49,7 @@ onMounted(load)
 
 <template>
   <div>
-    <h2 style="margin-bottom: 20px">我的订单</h2>
+    <h1 style="margin-bottom: 20px">我的订单</h1>
     <el-table :data="orders" border>
       <el-table-column prop="orderNo" label="订单号" width="190" />
       <el-table-column prop="goodsTitle" label="商品" />
