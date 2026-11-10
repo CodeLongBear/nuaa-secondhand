@@ -1,0 +1,35 @@
+# Java / Maven
+backend/target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# Node / Vue
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# 密钥与本地配置（绝不提交）
+.env
+application-local.yml
+*.local
+
+# 日志
+*.log
+logs/
+
+# 工具目录（本地 Redis 等）
+tools/redis/*.exe
+tools/redis/*.zip
+tools/redis/*.msi
+tools/rabbitmq/*.exe
+tools/rabbitmq/*.msi
+
+# OS
+.DS_Store
+Thumbs.db

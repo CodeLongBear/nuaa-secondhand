@@ -1,0 +1,171 @@
+/* ============================================================
+   校园二手交易平台 —— 全局设计系统
+   风格：taste-skill「framed-sheet」（tinted L 形框架 + 白色 sheet）
+   seed 1631901291 · kind commerce · light
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  /* 框架与表面（L 形框架 tint 用 green-grey，呼应校园/二手/循环；sheet 纯白） */
+  --ground: #f2f6f3;          /* 侧栏+顶栏的 tinted ground（face: 产品色绿灰） */
+  --surface: #ffffff;         /* 白色 sheet */
+  --raised: #f4f6f8;
+  --active: #e8ecea;
+  --border: #e3e8e5;          /* sheet 与卡片 1px 边 */
+  --rule: #edf0ee;
+  --control: #cdd1ce;
+
+  /* 文字三档 */
+  --text: #131416;
+  --muted: #5d5f60;
+  --faint: #6b6b6b;
+
+  /* 主按钮近黑；accent teal 只上数据与选中态 */
+  --primary: #131416;
+  --accent: #1b6c80;
+  --chart-1: #1b6c80;
+  --positive: #1e7b4f;
+  --negative: #c4242a;
+  --warning: #92400e;
+
+  --pill-positive-bg: #dcfae5;
+  --pill-positive-ink: #04250e;
+  --pill-negative-bg: #ffedea;
+  --pill-negative-ink: #831c1e;
+  --pill-warning-bg: #fffbeb;
+  --pill-warning-ink: #92400e;
+  --pill-neutral-bg: #ebedee;
+  --pill-neutral-ink: #353736;
+
+  /* 圆角与布局 */
+  --radius-card: 8px;
+  --radius-control: 6px;
+  --radius-sheet: 16px;
+  --sheet-inset: 8px;
+  --sidebar-width: 228px;
+  --topbar-height: 48px;
+  --gap: 24px;
+  --pad: 24px;
+  --row-height: 48px;
+  --control-height: 32px;
+
+  /* 字号（app 不是 display type） */
+  --fs-title: 22px;
+  --fs-section: 16px;
+  --fs-kpi: 28px;
+  --fs-body: 14px;
+  --fs-small: 12px;
+
+  --font: 'IBM Plex Sans', -apple-system, 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Consolas, monospace;
+
+  /* ---- 覆盖 Element Plus 主题变量 ---- */
+  --el-color-primary: var(--primary);
+  --el-color-primary-light-3: #3a3c3e;
+  --el-color-primary-light-5: #6a6c6e;
+  --el-color-primary-light-7: #b9bbbc;
+  --el-color-primary-light-8: #d2d3d4;
+  --el-color-primary-light-9: #eaeaeb;
+  --el-color-primary-dark-2: #0e0f10;
+
+  --el-color-success: var(--positive);
+  --el-color-danger: var(--negative);
+  --el-color-error: var(--negative);
+  --el-color-warning: var(--warning);
+
+  --el-text-color-primary: var(--text);
+  --el-text-color-regular: var(--muted);
+  --el-text-color-secondary: var(--faint);
+  --el-text-color-placeholder: #9ca3af;
+
+  --el-border-color: var(--control);
+  --el-border-color-light: var(--border);
+  --el-border-color-lighter: var(--rule);
+  --el-border-radius-base: var(--radius-control);
+
+  --el-bg-color: var(--surface);
+  --el-bg-color-page: var(--surface);
+  --el-fill-color-light: var(--raised);
+  --el-fill-color-blank: var(--surface);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font);
+  font-size: var(--fs-body);
+  line-height: 1.55;
+  background: var(--ground);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+/* 数字：tabular 对齐；ID/订单号等用 mono */
+.num {
+  font-variant-numeric: tabular-nums;
+}
+.mono {
+  font-family: var(--font-mono);
+}
+
+/* 页面标题：22px 名词，ink，克制 */
+h2 {
+  font-size: var(--fs-title);
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0;
+}
+
+h3 {
+  font-size: var(--fs-section);
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* 卡片：扁平，1px 边，无阴影 */
+.el-card {
+  border: 1px solid var(--border);
+  box-shadow: none;
+  border-radius: var(--radius-card);
+  transition: border-color 0.15s;
+}
+.el-card.is-hover-shadow:hover {
+  box-shadow: none;
+}
+.el-card:hover {
+  border-color: var(--control);
+}
+
+/* 主按钮近黑 */
+.el-button--primary {
+  --el-button-bg-color: var(--primary);
+  --el-button-border-color: var(--primary);
+  --el-button-hover-bg-color: #2e3133;
+  --el-button-hover-border-color: #2e3133;
+  --el-button-active-bg-color: #0e0f10;
+  --el-button-active-border-color: #0e0f10;
+}
+
+/* 表格：无斑马纹，行分隔线，数字右对齐 */
+.el-table {
+  --el-table-border-color: var(--rule);
+  --el-table-header-bg-color: transparent;
+  --el-table-header-text-color: var(--muted);
+  --el-table-row-hover-bg-color: var(--raised);
+}
+.el-table th.el-table__cell {
+  font-weight: 500;
+  font-size: var(--fs-small);
+  color: var(--muted);
+  background: transparent;
+  border-bottom: 1px solid var(--border);
+}
