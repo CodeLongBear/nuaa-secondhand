@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nuaa.secondhand.dto.Result;
 import com.nuaa.secondhand.entity.Goods;
 import com.nuaa.secondhand.mapper.GoodsMapper;
+import com.nuaa.secondhand.service.FeedPushService;
 import com.nuaa.secondhand.service.GoodsService;
 import com.nuaa.secondhand.utils.RedisConstants;
 import com.nuaa.secondhand.utils.SimpleRedisLock;
@@ -24,6 +25,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +50,9 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
 
     @Resource
     private ObjectMapper objectMapper;
+
+    @Resource
+    private FeedPushService feedPushService;
 
     @Override
     public Result detail(Long id) {
@@ -115,18 +120,37 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
     }
 
     @Override
-    public Result pageList(int page, int size, String category, String keyword, String sort) {
+    public Result pageList(int page, int size, String category, String keyword, String sort,
+                           BigDecimal priceMin, BigDecimal priceMax, String condition) {
         Page<Goods> p = new Page<>(page, size);
         LambdaQueryWrapper<Goods> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Goods::getStatus, 1);
         if (StringUtils.hasText(category)) {
             wrapper.eq(Goods::getCategory, category);
         }
+        if (StringUtils.hasText(condition)) {
+            wrapper.eq(Goods::getConditionDesc, condition);
+        }
+        if (priceMin != null) {
+            wrapper.ge(Goods::getPrice, priceMin);
+        }
+        if (priceMax != null) {
+            wrapper.le(Goods::getPrice, priceMax);
+        }
         if (StringUtils.hasText(keyword)) {
+            // 记录搜索历史 + 热门搜索词
+            Long userId = UserHolder.getUserId();
+            if (userId != null) {
+                stringRedisTemplate.opsForZSet().add(
+                        RedisConstants.SEARCH_HISTORY_KEY + userId, keyword, System.currentTimeMillis());
+            }
+            stringRedisTemplate.opsForZSet().incrementScore(RedisConstants.SEARCH_HOT_KEY, keyword, 1);
             wrapper.and(w -> w.like(Goods::getTitle, keyword).or().like(Goods::getDescription, keyword));
         }
         if ("price".equals(sort)) {
             wrapper.orderByAsc(Goods::getPrice);
+        } else if ("price_desc".equals(sort)) {
+            wrapper.orderByDesc(Goods::getPrice);
         } else {
             wrapper.orderByDesc(Goods::getCreateTime);
         }
@@ -155,14 +179,8 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
                     GEO_KEY, new Point(goods.getLongitude(), goods.getLatitude()), goods.getId().toString());
         }
 
-        // Feed 推送给粉丝（推模式）
-        Set<String> fans = stringRedisTemplate.opsForSet().members(FANS_KEY + userId);
-        if (fans != null && !fans.isEmpty()) {
-            long score = System.currentTimeMillis();
-            for (String fanId : fans) {
-                stringRedisTemplate.opsForZSet().add(RedisConstants.FEED_KEY + fanId, goods.getId().toString(), score);
-            }
-        }
+        // Feed 推送给粉丝（推模式，异步线程池执行）
+        feedPushService.pushToFans(userId, goods.getId());
         return Result.ok(goods.getId());
     }
 
@@ -220,6 +238,23 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
     public Result uvCount(Long id) {
         Long uv = stringRedisTemplate.opsForHyperLogLog().size(RedisConstants.GOODS_UV_KEY + id);
         return Result.ok(uv);
+    }
+
+    @Override
+    public Result searchHistory() {
+        Long userId = UserHolder.getUserId();
+        if (userId == null) {
+            return Result.ok(List.of());
+        }
+        Set<String> history = stringRedisTemplate.opsForZSet().reverseRange(
+                RedisConstants.SEARCH_HISTORY_KEY + userId, 0, 9);
+        return Result.ok(history == null ? List.of() : new ArrayList<>(history));
+    }
+
+    @Override
+    public Result searchHot() {
+        Set<String> hot = stringRedisTemplate.opsForZSet().reverseRange(RedisConstants.SEARCH_HOT_KEY, 0, 9);
+        return Result.ok(hot == null ? List.of() : new ArrayList<>(hot));
     }
 
     /** 记录 UV（HyperLogLog） */

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getGoodsList } from '../api'
+import { getGoodsList, getSearchHot, getSearchHistory, resolveImage } from '../api'
 
 const router = useRouter()
 const goodsList = ref([])
@@ -10,29 +10,65 @@ const page = ref(1)
 const size = ref(12)
 const keyword = ref('')
 const category = ref('')
+const sort = ref('')
+const priceMin = ref(null)
+const priceMax = ref(null)
+const condition = ref('')
+const hotWords = ref([])
+const historyWords = ref([])
 const categories = ['数码', '书籍', '生活用品', '服饰', '运动', '其他']
+const conditions = ['全新', '九成新', '八成新', '七成新及以下']
 
 async function load() {
   const res = await getGoodsList({
     page: page.value,
     size: size.value,
     keyword: keyword.value,
-    category: category.value
+    category: category.value,
+    sort: sort.value,
+    priceMin: priceMin.value,
+    priceMax: priceMax.value,
+    condition: condition.value
   })
   goodsList.value = res.data
   total.value = res.total
 }
 
+async function loadHot() {
+  try {
+    const res = await getSearchHot()
+    hotWords.value = res.data || []
+  } catch (e) {}
+}
+
+async function loadHistory() {
+  try {
+    const res = await getSearchHistory()
+    historyWords.value = res.data || []
+  } catch (e) {}
+}
+
 function search() {
   page.value = 1
   load()
+  loadHistory()
+  loadHot()
+}
+
+function searchByWord(w) {
+  keyword.value = w
+  search()
 }
 
 function goDetail(id) {
   router.push(`/goods/${id}`)
 }
 
-onMounted(load)
+onMounted(() => {
+  load()
+  loadHot()
+  loadHistory()
+})
 </script>
 
 <template>
@@ -43,17 +79,40 @@ onMounted(load)
         placeholder="搜索商品标题 / 描述"
         clearable
         @keyup.enter="search"
-        style="width: 300px"
+        style="width: 240px"
       />
-      <el-select v-model="category" placeholder="全部分类" clearable style="width: 140px" @change="search">
+      <el-select v-model="category" placeholder="全部分类" clearable style="width: 130px" @change="search">
         <el-option v-for="c in categories" :key="c" :label="c" :value="c" />
       </el-select>
+      <el-select v-model="condition" placeholder="成色" clearable style="width: 120px" @change="search">
+        <el-option v-for="c in conditions" :key="c" :label="c" :value="c" />
+      </el-select>
+      <el-select v-model="sort" placeholder="排序" clearable style="width: 140px" @change="search">
+        <el-option label="最新发布" value="" />
+        <el-option label="价格从低到高" value="price" />
+        <el-option label="价格从高到低" value="price_desc" />
+      </el-select>
+      <el-input-number v-model="priceMin" :min="0" placeholder="最低价" style="width: 110px" @change="search" />
+      <el-input-number v-model="priceMax" :min="0" placeholder="最高价" style="width: 110px" @change="search" />
       <el-button type="primary" @click="search">搜索</el-button>
+    </div>
+
+    <div v-if="hotWords.length || historyWords.length" class="word-bar">
+      <template v-if="hotWords.length">
+        <span class="word-label">热门</span>
+        <el-tag v-for="w in hotWords" :key="'h' + w" class="word-tag" @click="searchByWord(w)">{{ w }}</el-tag>
+      </template>
+      <template v-if="historyWords.length">
+        <span class="word-label">历史</span>
+        <el-tag v-for="w in historyWords" :key="'s' + w" type="info" class="word-tag" @click="searchByWord(w)">{{ w }}</el-tag>
+      </template>
     </div>
 
     <el-row :gutter="16">
       <el-col v-for="g in goodsList" :key="g.id" :span="6" style="margin-bottom: 16px">
         <el-card class="goods-card" @click="goDetail(g.id)">
+          <img v-if="g.images" :src="resolveImage(g.images.split(',')[0])" class="cover" />
+          <div v-else class="cover placeholder">无图</div>
           <h3 class="goods-title">{{ g.title }}</h3>
           <p class="goods-desc">{{ g.description }}</p>
           <div class="goods-meta">
@@ -84,7 +143,36 @@ onMounted(load)
 .search-bar {
   display: flex;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.word-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.word-label {
+  font-size: 13px;
+  color: #909399;
+}
+.word-tag {
+  cursor: pointer;
+}
+.cover {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #c0c4cc;
+  background: #f5f7fa;
 }
 .goods-card {
   cursor: pointer;

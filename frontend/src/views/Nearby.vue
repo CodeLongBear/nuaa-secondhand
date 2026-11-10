@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getNearby } from '../api'
+import { getNearby, resolveImage } from '../api'
 
 const router = useRouter()
 const goodsList = ref([])
@@ -37,6 +37,7 @@ onMounted(load)
     <el-row :gutter="16">
       <el-col v-for="g in goodsList" :key="g.id" :span="6" style="margin-bottom: 16px">
         <el-card style="cursor: pointer" @click="router.push(`/goods/${g.id}`)">
+          <img v-if="g.images" :src="resolveImage(g.images.split(',')[0])" class="cover" />
           <h3>{{ g.title }}</h3>
           <p class="desc">{{ g.location }}</p>
           <span class="price num">￥{{ g.price }}</span>
@@ -53,6 +54,13 @@ onMounted(load)
   align-items: center;
   gap: 12px;
   margin-bottom: 20px;
+}
+.cover {
+  width: 100%;
+  height: 130px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 8px;
 }
 .desc {
   color: #909399;

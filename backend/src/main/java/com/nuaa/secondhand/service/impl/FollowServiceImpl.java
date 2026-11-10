@@ -1,5 +1,6 @@
 package com.nuaa.secondhand.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nuaa.secondhand.dto.Result;
 import com.nuaa.secondhand.entity.Follow;
@@ -7,6 +8,7 @@ import com.nuaa.secondhand.entity.Goods;
 import com.nuaa.secondhand.mapper.FollowMapper;
 import com.nuaa.secondhand.mapper.GoodsMapper;
 import com.nuaa.secondhand.service.FollowService;
+import com.nuaa.secondhand.service.MessageService;
 import com.nuaa.secondhand.utils.RedisConstants;
 import com.nuaa.secondhand.utils.UserHolder;
 import jakarta.annotation.Resource;
@@ -14,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -31,15 +34,33 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
     @Resource
     private GoodsMapper goodsMapper;
 
+    @Resource
+    private MessageService messageService;
+
     @Override
     public Result follow(Long followUserId, Boolean isFollow) {
         Long userId = UserHolder.getUserId();
         String followKey = RedisConstants.FOLLOW_KEY + userId;
         String fansKey = FANS_KEY + followUserId;
         if (Boolean.TRUE.equals(isFollow)) {
+            // 落库（幂等：已存在则跳过，避免唯一键冲突）
+            long exist = this.count(new LambdaQueryWrapper<Follow>()
+                    .eq(Follow::getUserId, userId)
+                    .eq(Follow::getFollowUserId, followUserId));
+            if (exist == 0) {
+                Follow follow = new Follow();
+                follow.setUserId(userId);
+                follow.setFollowUserId(followUserId);
+                follow.setCreateTime(LocalDateTime.now());
+                save(follow);
+            }
             stringRedisTemplate.opsForSet().add(followKey, followUserId.toString());
             stringRedisTemplate.opsForSet().add(fansKey, userId.toString());
+            messageService.notify(userId, followUserId, 3, "有用户关注了你", null);
         } else {
+            remove(new LambdaQueryWrapper<Follow>()
+                    .eq(Follow::getUserId, userId)
+                    .eq(Follow::getFollowUserId, followUserId));
             stringRedisTemplate.opsForSet().remove(followKey, followUserId.toString());
             stringRedisTemplate.opsForSet().remove(fansKey, userId.toString());
         }

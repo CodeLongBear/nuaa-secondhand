@@ -4,6 +4,8 @@ import com.nuaa.secondhand.dto.Result;
 import com.nuaa.secondhand.entity.Goods;
 import com.nuaa.secondhand.service.GoodsService;
 import jakarta.annotation.Resource;
+
+import java.math.BigDecimal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,8 +35,11 @@ public class GoodsController {
                        @RequestParam(defaultValue = "10") int size,
                        @RequestParam(required = false) String category,
                        @RequestParam(required = false) String keyword,
-                       @RequestParam(required = false) String sort) {
-        return goodsService.pageList(page, size, category, keyword, sort);
+                       @RequestParam(required = false) String sort,
+                       @RequestParam(required = false) BigDecimal priceMin,
+                       @RequestParam(required = false) BigDecimal priceMax,
+                       @RequestParam(required = false) String condition) {
+        return goodsService.pageList(page, size, category, keyword, sort, priceMin, priceMax, condition);
     }
 
     /** 发布商品 */
@@ -73,5 +78,17 @@ public class GoodsController {
     @GetMapping("/uv/{id}")
     public Result uv(@PathVariable Long id) {
         return goodsService.uvCount(id);
+    }
+
+    /** 我的搜索历史 */
+    @GetMapping("/search/history")
+    public Result searchHistory() {
+        return goodsService.searchHistory();
+    }
+
+    /** 热门搜索词 */
+    @GetMapping("/search/hot")
+    public Result searchHot() {
+        return goodsService.searchHot();
     }
 }

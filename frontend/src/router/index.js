@@ -11,7 +11,9 @@ const routes = [
   { path: '/feed', component: () => import('../views/Feed.vue') },
   { path: '/nearby', component: () => import('../views/Nearby.vue') },
   { path: '/sign', component: () => import('../views/Sign.vue') },
-  { path: '/agent', component: () => import('../views/Agent.vue') }
+  { path: '/agent', component: () => import('../views/Agent.vue') },
+  { path: '/favorites', component: () => import('../views/Favorites.vue') },
+  { path: '/messages', component: () => import('../views/Messages.vue') }
 ]
 
 const router = createRouter({

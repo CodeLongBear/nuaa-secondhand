@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getFeed } from '../api'
+import { getFeed, resolveImage } from '../api'
 
 const feeds = ref([])
 
@@ -18,6 +18,7 @@ onMounted(load)
     <el-timeline v-if="feeds.length">
       <el-timeline-item v-for="f in feeds" :key="f.id" :timestamp="f.createTime">
         <el-card>
+          <img v-if="f.images" :src="resolveImage(f.images.split(',')[0])" class="cover" />
           <h3>{{ f.title }}</h3>
           <p class="desc">{{ f.description }}</p>
           <div>
@@ -32,6 +33,13 @@ onMounted(load)
 </template>
 
 <style scoped>
+.cover {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
 .desc {
   color: #909399;
   font-size: 13px;

@@ -23,6 +23,9 @@ application-local.yml
 *.log
 logs/
 
+# 上传的图片（本地运行产物）
+backend/uploads/
+
 # 工具目录（本地 Redis 等）
 tools/redis/*.exe
 tools/redis/*.zip

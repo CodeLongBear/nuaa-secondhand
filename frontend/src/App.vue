@@ -1,6 +1,8 @@
 <script setup>
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useUserStore } from './store/user'
 import { useRouter, useRoute } from 'vue-router'
+import { getUnreadCount } from './api'
 const userStore = useUserStore()
 const router = useRouter()
 const route = useRoute()
@@ -13,8 +15,34 @@ const nav = [
   { path: '/sign', label: '每日签到' },
   { path: '/agent', label: 'AI 助手' },
   { path: '/orders', label: '我的订单' },
+  { path: '/favorites', label: '我的收藏' },
+  { path: '/messages', label: '消息' },
   { path: '/publish', label: '发布商品' }
 ]
+
+const unreadCount = ref(0)
+let timer = null
+
+async function refreshUnread() {
+  try {
+    if (userStore.token) {
+      const res = await getUnreadCount()
+      unreadCount.value = res.data || 0
+    } else {
+      unreadCount.value = 0
+    }
+  } catch (e) {
+    unreadCount.value = 0
+  }
+}
+
+onMounted(() => {
+  refreshUnread()
+  timer = setInterval(refreshUnread, 15000)
+})
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
+})
 
 function logout() {
   userStore.logout()
@@ -43,6 +71,9 @@ function logout() {
           @click="router.push(item.path)"
         >
           {{ item.label }}
+          <span v-if="item.path === '/messages' && unreadCount > 0" class="badge">
+            {{ unreadCount > 99 ? '99+' : unreadCount }}
+          </span>
         </a>
       </nav>
     </aside>
@@ -123,6 +154,19 @@ function logout() {
   color: var(--text);
   font-weight: 600;
   background: var(--active);
+}
+.badge {
+  display: inline-block;
+  margin-left: 8px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: #e5484d;
+  color: #fff;
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+  border-radius: 9px;
 }
 
 /* 右半框架 */

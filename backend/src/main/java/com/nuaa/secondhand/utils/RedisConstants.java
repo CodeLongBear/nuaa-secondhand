@@ -21,4 +21,7 @@ public class RedisConstants {
     public static final String GOODS_UV_KEY = "uv:goods:";           // 商品 UV（HLL）
 
     public static final String LOCK_KEY = "lock:";                   // 分布式锁前缀
+
+    public static final String SEARCH_HISTORY_KEY = "search:history:"; // 用户搜索历史（ZSet）
+    public static final String SEARCH_HOT_KEY = "search:hot";          // 热门搜索词（ZSet）
 }

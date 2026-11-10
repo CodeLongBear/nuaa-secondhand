@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { recommend, getGoodsList, consult } from '../api'
+import { getGoodsList, BASE_URL } from '../api'
 
 const recommendation = ref('')
 const recommending = ref(false)
@@ -16,11 +16,44 @@ async function loadGoods() {
   goodsList.value = res.data
 }
 
+// 通用 SSE 流式读取：逐 token 回调 onChunk
+async function streamText(path, onChunk) {
+  try {
+    const resp = await fetch(`${BASE_URL}${path}`, {
+      headers: { authorization: localStorage.getItem('token') || '' }
+    })
+    if (!resp.ok || !resp.body) {
+      onChunk('AI 服务暂不可用，请稍后再试')
+      return
+    }
+    const reader = resp.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop()
+      for (const line of lines) {
+        if (line.startsWith('data:')) {
+          const data = line.slice(5).trim()
+          if (data && data !== '[DONE]') onChunk(data)
+        }
+      }
+    }
+  } catch (e) {
+    onChunk('AI 服务暂不可用，请稍后再试')
+  }
+}
+
 async function handleRecommend() {
   recommending.value = true
+  recommendation.value = ''
   try {
-    const res = await recommend()
-    recommendation.value = res.data
+    await streamText('/agent/recommend/stream', (t) => {
+      recommendation.value += t
+    })
   } finally {
     recommending.value = false
   }
@@ -32,9 +65,14 @@ async function handleConsult() {
     return
   }
   consulting.value = true
+  answer.value = ''
   try {
-    const res = await consult(selectedGoods.value, question.value)
-    answer.value = res.data
+    await streamText(
+      `/agent/consult/stream/${selectedGoods.value}?question=${encodeURIComponent(question.value)}`,
+      (t) => {
+        answer.value += t
+      }
+    )
   } finally {
     consulting.value = false
   }
@@ -49,7 +87,7 @@ onMounted(loadGoods)
 
     <el-card style="margin-bottom: 20px">
       <h3>智能商品推荐</h3>
-      <p class="tip">基于当前在售商品，AI 为你推荐最值得关注的好物</p>
+      <p class="tip">基于你的收藏偏好，AI 流式推荐最值得关注的好物</p>
       <el-button type="primary" :loading="recommending" @click="handleRecommend">获取推荐</el-button>
       <el-alert v-if="recommendation" type="success" :closable="false" style="margin-top: 16px">
         <pre style="white-space: pre-wrap; margin: 0; font-family: inherit">{{ recommendation }}</pre>
@@ -58,7 +96,7 @@ onMounted(loadGoods)
 
     <el-card>
       <h3>智能议价咨询</h3>
-      <p class="tip">选择商品，问问 AI 价格是否合理</p>
+      <p class="tip">选择商品，问问 AI 价格是否合理（流式输出）</p>
       <div style="display: flex; gap: 12px; margin-bottom: 12px">
         <el-select v-model="selectedGoods" placeholder="选择商品" filterable style="width: 300px">
           <el-option

@@ -74,6 +74,55 @@ CREATE TABLE IF NOT EXISTS tb_follow (
     UNIQUE KEY uk_user_follow (user_id, follow_user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='关注表';
 
+-- 评价表（交易完成后互评）
+CREATE TABLE IF NOT EXISTS tb_review (
+    id             BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    order_id       BIGINT       NOT NULL                COMMENT '订单id',
+    reviewer_id    BIGINT       NOT NULL                COMMENT '评价人id',
+    target_user_id BIGINT       NOT NULL                COMMENT '被评价人id',
+    score          TINYINT      NOT NULL                COMMENT '评分 1-5',
+    content        VARCHAR(500) DEFAULT NULL            COMMENT '评价内容',
+    create_time    DATETIME     DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_order_reviewer (order_id, reviewer_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='评价表';
+
+-- 评论表（商品留言，支持回复）
+CREATE TABLE IF NOT EXISTS tb_comment (
+    id          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    goods_id    BIGINT       NOT NULL                COMMENT '商品id',
+    user_id     BIGINT       NOT NULL                COMMENT '评论人id',
+    parent_id   BIGINT       DEFAULT 0               COMMENT '父评论id，0=顶层',
+    content     VARCHAR(500) NOT NULL                COMMENT '评论内容',
+    create_time DATETIME     DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (id),
+    KEY idx_goods (goods_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='评论表';
+
+-- 收藏表
+CREATE TABLE IF NOT EXISTS tb_favorite (
+    id          BIGINT   NOT NULL AUTO_INCREMENT COMMENT '主键',
+    user_id     BIGINT   NOT NULL                 COMMENT '用户id',
+    goods_id    BIGINT   NOT NULL                 COMMENT '商品id',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_user_goods (user_id, goods_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='收藏表';
+
+-- 站内消息表
+CREATE TABLE IF NOT EXISTS tb_message (
+    id           BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    from_user_id BIGINT       NOT NULL                COMMENT '发送者id，0=系统',
+    to_user_id   BIGINT       NOT NULL                COMMENT '接收者id',
+    type         TINYINT      NOT NULL                COMMENT '类型 1下单 2评论 3关注 4评价',
+    content      VARCHAR(500) DEFAULT NULL            COMMENT '消息内容',
+    goods_id     BIGINT       DEFAULT NULL            COMMENT '关联商品id',
+    is_read      TINYINT      DEFAULT 0               COMMENT '是否已读 0否1是',
+    create_time  DATETIME     DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (id),
+    KEY idx_to_user (to_user_id, is_read)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='站内消息表';
+
 -- ============================================================
 -- 初始化测试数据（可选，便于开发调试）
 -- ============================================================

@@ -7,6 +7,7 @@ import com.nuaa.secondhand.entity.Goods;
 import com.nuaa.secondhand.entity.Order;
 import com.nuaa.secondhand.mapper.GoodsMapper;
 import com.nuaa.secondhand.mapper.OrderMapper;
+import com.nuaa.secondhand.service.MessageService;
 import com.nuaa.secondhand.service.OrderService;
 import com.nuaa.secondhand.utils.RedisConstants;
 import com.nuaa.secondhand.utils.UserHolder;
@@ -45,7 +46,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Resource
     private GoodsMapper goodsMapper;
 
+    @Resource
+    private MessageService messageService;
+
     @Override
+    @Transactional
     public Result createOrder(Long goodsId) {
         Long userId = UserHolder.getUserId();
         Goods goods = goodsMapper.selectById(goodsId);
@@ -54,6 +59,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
         if (goods.getSellerId().equals(userId)) {
             return Result.fail("不能购买自己的商品");
+        }
+        // 原子扣库存（普通商品库存为 1，卖出即自动下架）
+        if (goodsMapper.deductStock(goodsId) == 0) {
+            return Result.fail("库存不足");
         }
         Order order = new Order();
         order.setOrderNo(generateOrderNo());
@@ -65,6 +74,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setCreateTime(LocalDateTime.now());
         order.setUpdateTime(LocalDateTime.now());
         save(order);
+        messageService.notify(userId, goods.getSellerId(), 1, "有用户下单了你的商品", goodsId);
         return Result.ok(order.getId());
     }
 
@@ -110,15 +120,48 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     @Override
+    @Transactional
     public Result updateStatus(Long orderId, Integer status) {
         Long userId = UserHolder.getUserId();
         Order order = getById(orderId);
         if (order == null) {
             return Result.fail("订单不存在");
         }
-        if (!order.getBuyerId().equals(userId) && !order.getSellerId().equals(userId)) {
+        boolean isBuyer = order.getBuyerId().equals(userId);
+        boolean isSeller = order.getSellerId().equals(userId);
+        if (!isBuyer && !isSeller) {
             return Result.fail("无权操作该订单");
         }
+
+        int current = order.getStatus();
+        // 终态不可再改
+        if (current == 3 || current == 4) {
+            return Result.fail("订单已结束，无法再修改状态");
+        }
+
+        // 状态机：1已拍 → 2面交中(卖家发货) / 4已取消；2面交中 → 3已完成(买家收货)
+        if (current == 1 && status == 2) {
+            if (!isSeller) {
+                return Result.fail("仅卖家可确认发货");
+            }
+        } else if (current == 2 && status == 3) {
+            if (!isBuyer) {
+                return Result.fail("仅买家可确认收货");
+            }
+        } else if (current == 1 && status == 4) {
+            // 取消订单：回补库存，商品若已售出下架则恢复在售
+            Goods goods = goodsMapper.selectById(order.getGoodsId());
+            if (goods != null) {
+                goodsMapper.addStock(order.getGoodsId());
+                if (Integer.valueOf(2).equals(goods.getStatus())) {
+                    goods.setStatus(1);
+                    goodsMapper.updateById(goods);
+                }
+            }
+        } else {
+            return Result.fail("非法的状态流转");
+        }
+
         order.setStatus(status);
         order.setUpdateTime(LocalDateTime.now());
         updateById(order);
@@ -144,13 +187,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setUpdateTime(LocalDateTime.now());
         save(order);
 
-        // 扣减数据库库存，卖完下架
-        int remain = goods.getStock() - 1;
-        goods.setStock(remain);
-        if (remain <= 0) {
-            goods.setStatus(2);
+        // 原子扣库存 + 卖完自动下架（防数据库层超卖）
+        int updated = goodsMapper.deductStock(goodsId);
+        if (updated == 0) {
+            log.warn("秒杀下单：数据库扣库存失败（库存不足或不一致）goodsId={}", goodsId);
         }
-        goodsMapper.updateById(goods);
+        messageService.notify(userId, goods.getSellerId(), 1, "有用户秒杀了你的商品", goodsId);
     }
 
     private String generateOrderNo() {
