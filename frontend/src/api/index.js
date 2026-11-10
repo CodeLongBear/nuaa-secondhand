@@ -13,6 +13,9 @@ export const resolveImage = (url) => {
 export const sendCode = (studentNo) => request.post('/user/code', null, { params: { studentNo } })
 export const login = (data) => request.post('/user/login', data)
 export const getMe = () => request.get('/user/me')
+export const getUserList = () => request.get('/user/list')
+export const getUserDetail = (id) => request.get(`/user/detail/${id}`)
+export const getUserGoods = (id) => request.get(`/user/goods/${id}`)
 
 // ============ 商品 ============
 export const getGoodsDetail = (id) => request.get(`/goods/detail/${id}`)
@@ -37,6 +40,7 @@ export const follow = (userId, isFollow) => request.put(`/follow/${userId}/${isF
 export const isFollow = (userId) => request.get(`/follow/isFollow/${userId}`)
 export const getFeed = () => request.get('/follow/feed')
 export const getCommonFollow = (otherId) => request.get(`/follow/common/${otherId}`)
+export const getMyFollows = () => request.get('/follow/myFollows')
 
 // ============ 签到 ============
 export const sign = () => request.post('/sign')

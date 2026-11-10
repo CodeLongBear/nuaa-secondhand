@@ -5,6 +5,7 @@ import com.nuaa.secondhand.dto.Result;
 import com.nuaa.secondhand.service.UserService;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,5 +35,23 @@ public class UserController {
     @GetMapping("/me")
     public Result me() {
         return userService.me();
+    }
+
+    /** 用户列表 */
+    @GetMapping("/list")
+    public Result list() {
+        return userService.listUsers();
+    }
+
+    /** 用户详情 */
+    @GetMapping("/detail/{id}")
+    public Result detail(@PathVariable Long id) {
+        return userService.userDetail(id);
+    }
+
+    /** 用户发布的在售商品 */
+    @GetMapping("/goods/{id}")
+    public Result goods(@PathVariable Long id) {
+        return userService.userGoods(id);
     }
 }

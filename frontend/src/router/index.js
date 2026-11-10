@@ -13,7 +13,9 @@ const routes = [
   { path: '/sign', component: () => import('../views/Sign.vue') },
   { path: '/agent', component: () => import('../views/Agent.vue') },
   { path: '/favorites', component: () => import('../views/Favorites.vue') },
-  { path: '/messages', component: () => import('../views/Messages.vue') }
+  { path: '/messages', component: () => import('../views/Messages.vue') },
+  { path: '/users', component: () => import('../views/Users.vue') },
+  { path: '/user/:id', component: () => import('../views/UserHome.vue') }
 ]
 
 const router = createRouter({

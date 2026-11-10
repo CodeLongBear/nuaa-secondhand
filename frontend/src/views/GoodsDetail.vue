@@ -4,7 +4,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   getGoodsDetail, createOrder, seckill, addFavorite, removeFavorite, isFavorite,
-  getComments, addComment, getGoodsUv, getMe, deleteGoods, resolveImage, BASE_URL
+  getComments, addComment, getGoodsUv, getMe, deleteGoods, resolveImage, BASE_URL,
+  follow, isFollow
 } from '../api'
 
 const route = useRoute()
@@ -13,6 +14,7 @@ const router = useRouter()
 const goods = ref(null)
 const images = ref([])
 const favorited = ref(false)
+const sellerFollowed = ref(false)
 const uv = ref(0)
 const comments = ref([])
 const commentText = ref('')
@@ -31,6 +33,7 @@ async function load() {
   loadUv()
   loadComments()
   loadFavorite()
+  loadSellerFollow()
 }
 
 async function loadCurrentUser() {
@@ -52,6 +55,22 @@ async function loadFavorite() {
     const res = await isFavorite(route.params.id)
     favorited.value = !!res.data
   } catch (e) {}
+}
+
+async function loadSellerFollow() {
+  try {
+    if (goods.value?.sellerId) {
+      const res = await isFollow(goods.value.sellerId)
+      sellerFollowed.value = !!res.data
+    }
+  } catch (e) {}
+}
+
+async function toggleFollowSeller() {
+  if (!goods.value?.sellerId) return
+  await follow(goods.value.sellerId, !sellerFollowed.value)
+  ElMessage.success(sellerFollowed.value ? '已取消关注' : '已关注卖家')
+  sellerFollowed.value = !sellerFollowed.value
 }
 
 async function loadComments() {
@@ -165,6 +184,9 @@ onMounted(load)
         <el-button v-if="goods.isHot === 1" type="danger" size="large" @click="handleSeckill">抢购</el-button>
         <el-button size="large" :type="favorited ? 'warning' : 'default'" @click="toggleFavorite">
           {{ favorited ? '取消收藏' : '收藏' }}
+        </el-button>
+        <el-button v-if="!isSeller" size="large" :type="sellerFollowed ? 'default' : 'primary'" @click="toggleFollowSeller">
+          {{ sellerFollowed ? '已关注卖家' : '关注卖家' }}
         </el-button>
         <el-button v-if="isSeller" size="large" type="info" @click="handleDelete">下架商品</el-button>
       </div>

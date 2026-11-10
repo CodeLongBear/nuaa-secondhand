@@ -12,6 +12,7 @@ const nav = [
   { path: '/seckill', label: '限时抢购' },
   { path: '/nearby', label: '附近好物' },
   { path: '/feed', label: '关注动态' },
+  { path: '/users', label: '用户' },
   { path: '/sign', label: '每日签到' },
   { path: '/agent', label: 'AI 助手' },
   { path: '/orders', label: '我的订单' },

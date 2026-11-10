@@ -1,9 +1,12 @@
 package com.nuaa.secondhand.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nuaa.secondhand.dto.LoginFormDTO;
 import com.nuaa.secondhand.dto.Result;
+import com.nuaa.secondhand.entity.Goods;
 import com.nuaa.secondhand.entity.User;
+import com.nuaa.secondhand.mapper.GoodsMapper;
 import com.nuaa.secondhand.mapper.UserMapper;
 import com.nuaa.secondhand.service.UserService;
 import com.nuaa.secondhand.utils.RedisConstants;
@@ -13,7 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -26,6 +31,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+
+    @Resource
+    private GoodsMapper goodsMapper;
 
     @Override
     public Result sendCode(String studentNo) {
@@ -83,5 +91,47 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return Result.fail("未登录");
         }
         return Result.ok(user);
+    }
+
+    @Override
+    public Result listUsers() {
+        List<User> users = list(new LambdaQueryWrapper<User>().orderByDesc(User::getCredit));
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (User u : users) {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", u.getId());
+            m.put("nickname", u.getNickname());
+            m.put("studentNo", u.getStudentNo());
+            m.put("school", u.getSchool());
+            m.put("credit", u.getCredit());
+            m.put("goodsCount", goodsMapper.selectCount(new LambdaQueryWrapper<Goods>()
+                    .eq(Goods::getSellerId, u.getId()).eq(Goods::getStatus, 1)));
+            result.add(m);
+        }
+        return Result.ok(result);
+    }
+
+    @Override
+    public Result userDetail(Long id) {
+        User u = getById(id);
+        if (u == null) {
+            return Result.fail("用户不存在");
+        }
+        Map<String, Object> m = new HashMap<>();
+        m.put("id", u.getId());
+        m.put("nickname", u.getNickname());
+        m.put("studentNo", u.getStudentNo());
+        m.put("school", u.getSchool());
+        m.put("credit", u.getCredit());
+        return Result.ok(m);
+    }
+
+    @Override
+    public Result userGoods(Long id) {
+        List<Goods> goods = goodsMapper.selectList(new LambdaQueryWrapper<Goods>()
+                .eq(Goods::getSellerId, id)
+                .eq(Goods::getStatus, 1)
+                .orderByDesc(Goods::getCreateTime));
+        return Result.ok(goods);
     }
 }

@@ -218,6 +218,11 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
 
     @Override
     public Result nearby(Double longitude, Double latitude, Double radius) {
+        // 懒加载：GEO 为空时从数据库同步有经纬度的在售商品（兼容直接 INSERT 的测试数据）
+        Long geoSize = stringRedisTemplate.opsForZSet().zCard(GEO_KEY);
+        if (geoSize == null || geoSize == 0) {
+            loadGeoFromDb();
+        }
         Circle circle = new Circle(new Point(longitude, latitude), new Distance(radius, Metrics.KILOMETERS));
         GeoResults<RedisGeoCommands.GeoLocation<String>> results =
                 stringRedisTemplate.opsForGeo().radius(GEO_KEY, circle);
@@ -232,6 +237,17 @@ public class GoodsServiceImpl extends ServiceImpl<GoodsMapper, Goods> implements
             }
         }
         return Result.ok(goodsList);
+    }
+
+    /** 从数据库同步有经纬度的在售商品到 GEO（附近商品索引） */
+    private void loadGeoFromDb() {
+        List<Goods> all = list(new LambdaQueryWrapper<Goods>().eq(Goods::getStatus, 1));
+        for (Goods g : all) {
+            if (g.getLongitude() != null && g.getLatitude() != null) {
+                stringRedisTemplate.opsForGeo().add(
+                        GEO_KEY, new Point(g.getLongitude(), g.getLatitude()), g.getId().toString());
+            }
+        }
     }
 
     @Override

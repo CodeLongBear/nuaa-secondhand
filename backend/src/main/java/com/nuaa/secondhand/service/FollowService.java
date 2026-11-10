@@ -17,4 +17,7 @@ public interface FollowService extends IService<Follow> {
 
     /** 关注动态 Feed 流 */
     Result feed();
+
+    /** 我关注的用户 id 列表 */
+    Result myFollows();
 }

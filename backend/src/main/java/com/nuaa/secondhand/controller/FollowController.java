@@ -39,4 +39,10 @@ public class FollowController {
     public Result feed() {
         return followService.feed();
     }
+
+    /** 我关注的用户 id 列表 */
+    @GetMapping("/myFollows")
+    public Result myFollows() {
+        return followService.myFollows();
+    }
 }

@@ -15,4 +15,13 @@ public interface UserService extends IService<User> {
 
     /** 获取当前登录用户 */
     Result me();
+
+    /** 用户列表（含信誉分、在售商品数） */
+    Result listUsers();
+
+    /** 用户详情 */
+    Result userDetail(Long id);
+
+    /** 用户发布的在售商品 */
+    Result userGoods(Long id);
 }

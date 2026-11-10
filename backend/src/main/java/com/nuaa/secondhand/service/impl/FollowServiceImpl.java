@@ -99,4 +99,15 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         }
         return Result.ok(goodsList);
     }
+
+    @Override
+    public Result myFollows() {
+        Long userId = UserHolder.getUserId();
+        Set<String> follows = stringRedisTemplate.opsForSet().members(RedisConstants.FOLLOW_KEY + userId);
+        if (follows == null || follows.isEmpty()) {
+            return Result.ok(List.of());
+        }
+        List<Long> ids = follows.stream().map(Long::valueOf).toList();
+        return Result.ok(ids);
+    }
 }
